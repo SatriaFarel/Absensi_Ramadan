@@ -283,6 +283,254 @@ render();
 
 </body>
 </html>
+    <div class="flex gap-3 flex-wrap">
+      <button onclick="exportJSON()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">Export JSON</button>
+      <button onclick="exportPDF()" class="bg-rose-600 text-white px-4 py-2 rounded-lg">Export PDF</button>
+      <label class="bg-amber-500 text-white px-4 py-2 rounded-lg cursor-pointer">
+        Import JSON
+        <input type="file" hidden onchange="importJSON(event)">
+      </label>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6">
+    <div class="w-full overflow-x-auto">
+      <table class="border-collapse text-[10px] sm:text-xs w-max min-w-full">
+        <thead>
+          <tr id="headerRow" class="bg-indigo-700 text-white">
+            <th class="border px-2 py-2">No</th>
+            <th class="border px-2 py-2">Nama</th>
+            <th class="border px-2 py-2">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+const STORAGE_KEY = "absensi_tadarus_ramadhan";
+const HIJRI_CACHE_KEY = "hijri_cache_today";
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+/* ================== SAVE ================== */
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+/* ================== TANGGAL ================== */
+async function tampilkanTanggal() {
+  const el = document.getElementById("tanggalSekarang");
+  const now = new Date();
+
+  const masehi = now.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  const todayKey = now.toISOString().split("T")[0];
+
+  const cache = JSON.parse(localStorage.getItem(HIJRI_CACHE_KEY));
+  if (cache && cache.date === todayKey) {
+    el.textContent = `${masehi} | ${cache.hijri}`;
+    return;
+  }
+
+  el.textContent = `Memuat hijriah... | ${masehi}`;
+
+  try {
+    const url = `https://api.aladhan.com/v1/gToH?date=${now.getDate()}-${now.getMonth()+1}-${now.getFullYear()}`;
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (json.code === 200 && json.data?.hijri) {
+      const h = json.data.hijri;
+      const hijriText = `${h.day} ${h.month.en} ${h.year} H`;
+
+      el.textContent = `${masehi} | ${hijriText}`;
+
+      localStorage.setItem(HIJRI_CACHE_KEY, JSON.stringify({
+        date: todayKey,
+        hijri: hijriText
+      }));
+    } else {
+      el.textContent = `${masehi} | Hijriah gagal dimuat`;
+    }
+
+  } catch {
+    el.textContent = `${masehi} | Hijriah gagal dimuat`;
+  }
+}
+
+/* ================== HEADER ================== */
+function generateHeader() {
+  const headerRow = document.getElementById("headerRow");
+  if (headerRow.children.length === 3) {
+    for (let i = 1; i <= 30; i++) {
+      const th = document.createElement("th");
+      th.className = "border px-1 py-2";
+      th.textContent = i;
+      headerRow.appendChild(th);
+    }
+  }
+}
+
+/* ================== RENDER ================== */
+function render() {
+  generateHeader();
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  data.forEach((item, index) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-slate-50";
+
+    tr.innerHTML = `
+      <td class="border text-center">${index+1}</td>
+      <td class="border px-2">
+        <input value="${item.nama}"
+          class="w-full bg-transparent outline-none"
+          onchange="editNama(${index}, this.value)">
+      </td>
+      <td class="border text-center">
+        <button onclick="hapusPeserta(${index})"
+          class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+          Hapus
+        </button>
+      </td>
+    `;
+
+    item.hadir.forEach((val, hariIndex) => {
+      const td = document.createElement("td");
+      td.className = "border text-center";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = val;
+      cb.className = "accent-indigo-600";
+
+      cb.addEventListener("change", () => {
+        data[index].hadir[hariIndex] = cb.checked;
+        save();
+      });
+
+      td.appendChild(cb);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+/* ================== CRUD ================== */
+function tambahPeserta() {
+  const input = document.getElementById("namaInput");
+  const nama = input.value.trim();
+  if (!nama) return;
+
+  data.push({
+    nama: nama,
+    hadir: Array(30).fill(false)
+  });
+
+  input.value = "";
+  save();
+  render();
+}
+
+function editNama(index, value) {
+  data[index].nama = value.trim();
+  save();
+}
+
+function hapusPeserta(index) {
+  if (!confirm("Yakin mau hapus peserta ini?")) return;
+  data.splice(index, 1);
+  save();
+  render();
+}
+
+/* ================== EXPORT / IMPORT ================== */
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "absensi_tadarus.json";
+  a.click();
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const imported = JSON.parse(evt.target.result);
+      if (!Array.isArray(imported)) throw "Format salah";
+      data = imported;
+      save();
+      render();
+    } catch {
+      alert("File JSON tidak valid");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ================== PDF ================== */
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("landscape");
+
+  doc.setFontSize(15);
+  doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 10, { align: "center" });
+  doc.text("Masjid Anwarul Hidayah", 148, 17, { align: "center" });
+
+  const headers = ["No", "Nama"];
+  for (let i = 1; i <= 30; i++) headers.push(i.toString());
+
+  const hariKosong = Array(30).fill(true);
+
+  data.forEach(peserta => {
+    peserta.hadir.forEach((val, i) => {
+      if (val) hariKosong[i] = false;
+    });
+  });
+
+  const rows = data.map((item, index) => [
+    index + 1,
+    item.nama,
+    ...item.hadir.map((h, i) => {
+      if (hariKosong[i]) return "";
+      return h ? "O" : "X";
+    })
+  ]);
+
+  doc.autoTable({
+    startY: 22,
+    head: [headers],
+    body: rows,
+    theme: "grid",
+    styles: { fontSize: 7 }
+  });
+
+  doc.save("absensi_tadarus.pdf");
+}
+
+/* ================== INIT ================== */
+tampilkanTanggal();
+render();
+
+</script>
+
+</body>
+</html>
     <div class="flex gap-3">
       <button onclick="exportJSON()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">Export JSON</button>
       <button onclick="exportPDF()" class="bg-rose-600 text-white px-4 py-2 rounded-lg">Export PDF</button>
