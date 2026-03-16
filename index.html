@@ -1,404 +1,542 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Absensi Tadarus</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- TAMBAHAN CHART -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  </head>
+  <title>Absensi Tadarus</title>
 
-  <body
-    class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen p-4 sm:p-6"
-  >
-    <div class="max-w-7xl mx-auto space-y-8">
-      <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center border">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
-          ABSENSI TADARUS AL-QUR'AN RAMADHAN 1447 H
-        </h1>
-        <p class="text-slate-600 text-base sm:text-lg mt-2">
-          Masjid Anwarul Hidayah
-        </p>
-        <p id="tanggalSekarang" class="text-sm text-slate-500 mt-2"></p>
-      </div>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-      <div
-        class="bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-wrap gap-4 items-center justify-between"
-      >
-        <div class="flex gap-3 flex-wrap">
-          <input
-            id="namaInput"
-            type="text"
-            placeholder="Masukkan Nama Peserta..."
-            class="border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 px-4 py-2 rounded-lg w-60 sm:w-64 outline-none"
-          />
+</head>
 
-          <button
-            onclick="tambahPeserta()"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg"
-          >
-            Tambah
-          </button>
-        </div>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen p-4 sm:p-6">
 
-        <div class="flex gap-3 flex-wrap">
-          <button
-            onclick="exportJSON()"
-            class="bg-emerald-600 text-white px-4 py-2 rounded-lg"
-          >
-            Export JSON
-          </button>
-          <button
-            onclick="exportPDF()"
-            class="bg-rose-600 text-white px-4 py-2 rounded-lg"
-          >
-            Export PDF
-          </button>
-          <label
-            class="bg-amber-500 text-white px-4 py-2 rounded-lg cursor-pointer"
-          >
-            Import JSON
-            <input type="file" hidden onchange="importJSON(event)" />
-          </label>
-        </div>
-      </div>
+  <div class="max-w-7xl mx-auto space-y-8">
 
-      <!-- TAMBAHAN CHART CARD -->
-      <div class="bg-white rounded-2xl shadow-md p-6">
-        <h2 class="text-lg font-semibold text-slate-700 mb-4">
-          Grafik Kehadiran Per Hari
-        </h2>
-        <div class="w-full overflow-x-auto">
-          <canvas id="chartKehadiran" height="100"></canvas>
-        </div>
-      </div>
+    <!-- HEADER -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center border">
 
-      <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6">
-        <div class="w-full overflow-x-auto">
-          <table
-            class="border-collapse text-[10px] sm:text-xs w-max min-w-full"
-          >
-            <thead>
-              <tr id="headerRow" class="bg-indigo-700 text-white">
-                <th class="border px-2 py-2">No</th>
-                <th class="border px-2 py-2">Nama</th>
-                <th class="border px-2 py-2">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+        ABSENSI TADARUS AL-QUR'AN RAMADHAN 1447 H
+      </h1>
+
+      <p class="text-slate-600 text-base sm:text-lg mt-2">
+        Masjid Anwarul Hidayah
+      </p>
+
+      <p id="tanggalSekarang" class="text-sm text-slate-500 mt-2"></p>
+
     </div>
 
-    <script>
-      const STORAGE_KEY = "absensi_tadarus_ramadhan";
-      const HIJRI_CACHE_KEY = "hijri_cache_today";
-      let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      let chartInstance = null; // simpan instance chart
 
-      function save() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    <!-- CONTROL -->
+    <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-wrap gap-4 items-center justify-between">
+
+      <div class="flex gap-3 flex-wrap">
+
+        <input id="namaInput" type="text" placeholder="Masukkan Nama Peserta..."
+          class="border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 px-4 py-2 rounded-lg w-60 sm:w-64 outline-none"
+          onkeypress="if(event.key==='Enter') tambahPeserta()" />
+
+        <button onclick="tambahPeserta()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg">
+          Tambah
+        </button>
+
+      </div>
+
+
+      <div class="flex gap-3 flex-wrap">
+
+        <button onclick="exportJSON()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">
+          Export JSON
+        </button>
+
+        <button onclick="exportPDF()" class="bg-rose-600 text-white px-4 py-2 rounded-lg">
+          Export PDF
+        </button>
+
+        <label class="bg-amber-500 text-white px-4 py-2 rounded-lg cursor-pointer">
+          Import JSON
+          <input type="file" hidden onchange="importJSON(event)">
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <!-- CHART -->
+    <div class="bg-white rounded-2xl shadow-md p-6">
+
+      <h2 class="text-lg font-semibold text-slate-700 mb-4">
+        Grafik Kehadiran Per Hari
+      </h2>
+
+      <div class="w-full overflow-x-auto">
+        <canvas id="chartKehadiran" height="100"></canvas>
+      </div>
+
+    </div>
+
+
+    <!-- TABLE -->
+    <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6">
+
+      <div class="w-full overflow-x-auto">
+
+        <table class="border-collapse text-[10px] sm:text-xs w-max min-w-full">
+
+          <thead>
+            <tr id="headerRow" class="bg-indigo-700 text-white">
+
+              <th class="border px-2 py-2">No</th>
+              <th class="border px-2 py-2">Nama</th>
+              <th class="border px-2 py-2">Aksi</th>
+
+            </tr>
+          </thead>
+
+          <tbody id="tbody"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <script>
+
+    const STORAGE_KEY = "absensi_tadarus_ramadhan"
+    const HIJRI_CACHE_KEY = "hijri_cache_today"
+
+    let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []
+    let chartInstance = null
+
+
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    }
+
+
+
+    function updateChart() {
+
+      const jumlahPerHari = Array(30).fill(0)
+
+      data.forEach(peserta => {
+        peserta.hadir.forEach((val, i) => {
+          if (val) jumlahPerHari[i]++
+        })
+      })
+
+      const ctx = document.getElementById("chartKehadiran")
+
+      if (chartInstance) {
+        chartInstance.destroy()
       }
 
-      /* ================== CHART ================== */
-      function updateChart() {
-        const jumlahPerHari = Array(30).fill(0);
+      chartInstance = new Chart(ctx, {
 
-        data.forEach((peserta) => {
-          peserta.hadir.forEach((val, i) => {
-            if (val) jumlahPerHari[i]++;
-          });
-        });
+        type: "bar",
 
-        const ctx = document.getElementById("chartKehadiran");
+        data: {
+          labels: Array.from({ length: 30 }, (_, i) => `Hari ${i + 1}`),
+          datasets: [
+            {
+              label: "Jumlah Hadir",
+              data: jumlahPerHari
+            }
+          ]
+        },
 
-        if (chartInstance) {
-          chartInstance.destroy();
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          }
         }
 
-        chartInstance = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: Array.from({ length: 30 }, (_, i) => `Hari ${i + 1}`),
-            datasets: [
-              {
-                label: "Jumlah Hadir",
-                data: jumlahPerHari,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  precision: 0,
-                },
-              },
-            },
-          },
-        });
+      })
+
+    }
+
+
+
+    async function tampilkanTanggal() {
+
+      const el = document.getElementById("tanggalSekarang")
+
+      const now = new Date()
+
+      const masehi = now.toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      })
+
+      const todayKey = now.toISOString().split("T")[0]
+
+      const cache = JSON.parse(localStorage.getItem(HIJRI_CACHE_KEY))
+
+      if (cache && cache.date === todayKey) {
+        el.textContent = `${masehi} | ${cache.hijri}`
+        return
       }
 
-      /* ================== TANGGAL ================== */
-      /* (TIDAK DIUBAH - SAMA PERSIS PUNYA KAMU) */
-      async function tampilkanTanggal() {
-        const el = document.getElementById("tanggalSekarang");
-        const now = new Date();
+      el.textContent = `Memuat hijriah... | ${masehi}`
 
-        const masehi = now.toLocaleDateString("id-ID", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        });
+      try {
 
-        const todayKey = now.toISOString().split("T")[0];
+        const url = `https://api.aladhan.com/v1/gToH?date=${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`
+        const res = await fetch(url)
+        const json = await res.json()
 
-        const cache = JSON.parse(localStorage.getItem(HIJRI_CACHE_KEY));
-        if (cache && cache.date === todayKey) {
-          el.textContent = `${masehi} | ${cache.hijri}`;
-          return;
+        if (json.code === 200 && json.data?.hijri) {
+
+          const h = json.data.hijri
+          const hijriText = `${h.day} ${h.month.en} ${h.year} H`
+
+          el.textContent = `${masehi} | ${hijriText}`
+
+          localStorage.setItem(HIJRI_CACHE_KEY, JSON.stringify({
+            date: todayKey,
+            hijri: hijriText
+          }))
+
         }
 
-        el.textContent = `Memuat hijriah... | ${masehi}`;
+      } catch {
+        el.textContent = `${masehi} | Hijriah gagal dimuat`
+      }
+
+    }
+
+
+
+    function generateHeader() {
+
+      const headerRow = document.getElementById("headerRow")
+
+      if (headerRow.children.length === 3) {
+
+        for (let i = 1; i <= 30; i++) {
+
+          const th = document.createElement("th")
+
+          th.className = "border px-1 py-2"
+
+          th.textContent = i
+
+          headerRow.appendChild(th)
+
+        }
+
+      }
+
+    }
+
+
+
+    function render() {
+
+      generateHeader()
+
+      const tbody = document.getElementById("tbody")
+
+      tbody.innerHTML = ""
+
+
+
+      data.forEach((item, index) => {
+
+        const tr = document.createElement("tr")
+
+        tr.className = "hover:bg-slate-50"
+
+
+
+        tr.innerHTML = `
+
+<td class="border text-center">${index + 1}</td>
+
+<td class="border px-2">
+
+<input value="${item.nama}"
+class="w-full bg-transparent outline-none"
+onchange="editNama(${index}, this.value)">
+
+</td>
+
+<td class="border text-center">
+
+<button onclick="hapusPeserta(${index})"
+class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+
+Hapus
+
+</button>
+
+</td>
+
+`
+
+
+
+        item.hadir.forEach((val, hariIndex) => {
+
+          const td = document.createElement("td")
+
+          td.className = "border text-center"
+
+          const cb = document.createElement("input")
+
+          cb.type = "checkbox"
+          cb.checked = val
+          cb.className = "accent-indigo-600"
+
+          cb.addEventListener("change", () => {
+
+            data[index].hadir[hariIndex] = cb.checked
+
+            save()
+
+            updateChart()
+
+          })
+
+          td.appendChild(cb)
+
+          tr.appendChild(td)
+
+        })
+
+
+
+        tbody.appendChild(tr)
+
+      })
+
+
+
+      updateChart()
+
+    }
+
+
+
+    function tambahPeserta() {
+
+      const input = document.getElementById("namaInput")
+
+      const nama = input.value.trim()
+
+      if (!nama) return
+
+      data.push({
+        nama: nama,
+        hadir: Array(30).fill(false)
+      })
+
+      input.value = ""
+
+      save()
+
+      render()
+
+    }
+
+
+
+    function editNama(index, value) {
+
+      data[index].nama = value.trim()
+
+      save()
+
+    }
+
+
+
+    function hapusPeserta(index) {
+
+      if (!confirm("Yakin mau hapus peserta ini?")) return
+
+      data.splice(index, 1)
+
+      save()
+
+      render()
+
+    }
+
+
+
+    function exportJSON() {
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+
+      const a = document.createElement("a")
+
+      a.href = URL.createObjectURL(blob)
+
+      a.download = "absensi_tadarus.json"
+
+      a.click()
+
+    }
+
+
+
+    function importJSON(e) {
+
+      const file = e.target.files[0]
+
+      if (!file) return
+
+      const reader = new FileReader()
+
+      reader.onload = function (evt) {
 
         try {
-          const url = `https://api.aladhan.com/v1/gToH?date=${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
-          const res = await fetch(url);
-          const json = await res.json();
 
-          if (json.code === 200 && json.data?.hijri) {
-            const h = json.data.hijri;
-            const hijriText = `${h.day} ${h.month.en} ${h.year} H`;
+          const imported = JSON.parse(evt.target.result)
 
-            el.textContent = `${masehi} | ${hijriText}`;
+          if (!Array.isArray(imported)) throw "Format salah"
 
-            localStorage.setItem(
-              HIJRI_CACHE_KEY,
-              JSON.stringify({
-                date: todayKey,
-                hijri: hijriText,
-              }),
-            );
-          } else {
-            el.textContent = `${masehi} | Hijriah gagal dimuat`;
-          }
+          imported.forEach(p => {
+            if (!Array.isArray(p.hadir) || p.hadir.length !== 30) {
+              throw "Data tidak valid"
+            }
+          })
+
+          data = imported
+
+          save()
+
+          render()
+
         } catch {
-          el.textContent = `${masehi} | Hijriah gagal dimuat`;
+
+          alert("File JSON tidak valid")
+
         }
+
       }
 
-      /* ================== HEADER ================== */
-      function generateHeader() {
-        const headerRow = document.getElementById("headerRow");
-        if (headerRow.children.length === 3) {
-          for (let i = 1; i <= 30; i++) {
-            const th = document.createElement("th");
-            th.className = "border px-1 py-2";
-            th.textContent = i;
-            headerRow.appendChild(th);
-          }
+      reader.readAsText(file)
+
+    }
+
+
+
+    function exportPDF() {
+
+      const { jsPDF } = window.jspdf
+
+      const doc = new jsPDF("landscape")
+
+      const now = new Date().toLocaleDateString("id-ID")
+
+      doc.setFontSize(18)
+      doc.setFont(undefined, "bold")
+
+      doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" })
+
+      doc.setFontSize(13)
+      doc.setFont(undefined, "normal")
+
+      doc.text("Masjid Anwarul Hidayah", 148, 18, { align: "center" })
+
+      doc.setFontSize(10)
+      doc.text(`Tanggal Cetak: ${now}`, 14, 18)
+
+
+
+      const headers = ["No", "Nama"]
+
+      for (let i = 1; i <= 30; i++) {
+        headers.push(i.toString())
+      }
+
+      headers.push("Total")
+
+
+
+      const rows = data.map((item, index) => {
+
+        const total = item.hadir.filter(Boolean).length
+
+        return [
+          index + 1,
+          item.nama,
+          ...item.hadir.map(h => h ? "O" : ""),
+          total
+        ]
+
+      })
+
+
+
+      doc.autoTable({
+
+        startY: 24,
+
+        head: [headers],
+
+        body: rows,
+
+        theme: "grid",
+
+        styles: {
+          fontSize: 11,
+          cellPadding: 3
+        },
+
+        headStyles: {
+          fillColor: [50, 50, 50],
+          textColor: 255,
+          fontStyle: "bold",
+          halign: "center",
+          fontSize: 12
+        },
+
+        bodyStyles: {
+          halign: "center"
+        },
+
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 50, halign: "left" },
+          32: { cellWidth: 15 }
         }
-      }
 
-      /* ================== RENDER ================== */
-      function render() {
-        generateHeader();
-        const tbody = document.getElementById("tbody");
-        tbody.innerHTML = "";
+      })
 
-        data.forEach((item, index) => {
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-slate-50";
+      doc.save("absensi_tadarus.pdf")
 
-          tr.innerHTML = `
-      <td class="border text-center">${index + 1}</td>
-      <td class="border px-2">
-        <input value="${item.nama}"
-          class="w-full bg-transparent outline-none"
-          onchange="editNama(${index}, this.value)">
-      </td>
-      <td class="border text-center">
-        <button onclick="hapusPeserta(${index})"
-          class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-          Hapus
-        </button>
-      </td>
-    `;
+    }
 
-          item.hadir.forEach((val, hariIndex) => {
-            const td = document.createElement("td");
-            td.className = "border text-center";
 
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.checked = val;
-            cb.className = "accent-indigo-600";
 
-            cb.addEventListener("change", () => {
-              data[index].hadir[hariIndex] = cb.checked;
-              save();
-              updateChart(); // UPDATE CHART
-            });
+    tampilkanTanggal()
+    render()
 
-            td.appendChild(cb);
-            tr.appendChild(td);
-          });
+  </script>
 
-          tbody.appendChild(tr);
-        });
+</body>
 
-        updateChart(); // update setiap render
-      }
-
-      /* ================== CRUD ================== */
-      function tambahPeserta() {
-        const input = document.getElementById("namaInput");
-        const nama = input.value.trim();
-        if (!nama) return;
-
-        data.push({
-          nama: nama,
-          hadir: Array(30).fill(false),
-        });
-
-        input.value = "";
-        save();
-        render();
-      }
-
-      function editNama(index, value) {
-        data[index].nama = value.trim();
-        save();
-      }
-
-      function hapusPeserta(index) {
-        if (!confirm("Yakin mau hapus peserta ini?")) return;
-        data.splice(index, 1);
-        save();
-        render();
-      }
-
-      /* ================== EXPORT / IMPORT ================== */
-      /* TIDAK DIUBAH */
-
-      function exportJSON() {
-        const blob = new Blob([JSON.stringify(data, null, 2)], {
-          type: "application/json",
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "absensi_tadarus.json";
-        a.click();
-      }
-
-      function importJSON(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function (evt) {
-          try {
-            const imported = JSON.parse(evt.target.result);
-            if (!Array.isArray(imported)) throw "Format salah";
-            data = imported;
-            save();
-            render();
-          } catch {
-            alert("File JSON tidak valid");
-          }
-        };
-        reader.readAsText(file);
-      }
-
-      /* ================== PDF ================== */
-      function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF("landscape");
-      
-        const now = new Date().toLocaleDateString("id-ID");
-      
-        /* ====== HEADER ====== */
-        doc.setFontSize(16);
-        doc.setFont(undefined, "bold");
-        doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" });
-      
-        doc.setFontSize(12);
-        doc.setFont(undefined, "normal");
-        doc.text("Masjid Anwarul Hidayah", 148, 18, { align: "center" });
-      
-        doc.setFontSize(9);
-        doc.text(`Tanggal Cetak: ${now}`, 14, 18);
-      
-        /* ====== CEK HARI YANG ADA KEHADIRAN ====== */
-        const hariAktif = [];
-      
-        for (let i = 0; i < 30; i++) {
-          const ada = data.some(p => p.hadir[i]);
-          if (ada) hariAktif.push(i);
-        }
-      
-        /* ====== HEADER TABLE ====== */
-        const headers = ["No", "Nama"];
-      
-        hariAktif.forEach(h => {
-          headers.push((h + 1).toString());
-        });
-      
-        /* ====== BODY TABLE ====== */
-        const rows = data.map((item, index) => {
-          const row = [index + 1, item.nama];
-      
-          hariAktif.forEach(h => {
-            row.push(item.hadir[h] ? "O" : "");
-          });
-      
-          return row;
-        });
-      
-        /* ====== TABLE ====== */
-        doc.autoTable({
-          startY: 24,
-          head: [headers],
-          body: rows,
-      
-          theme: "grid",
-      
-          headStyles: {
-            fillColor: [60, 60, 60],
-            textColor: 255,
-            fontStyle: "bold",
-            halign: "center"
-          },
-      
-          bodyStyles: {
-            halign: "center",
-            fontSize: 8
-          },
-      
-          columnStyles: {
-            1: { halign: "left" } // kolom nama rata kiri
-          },
-      
-          styles: {
-            cellPadding: 2
-          }
-        });
-      
-        doc.save("absensi_tadarus.pdf");
-      }
-
-      /* ================== INIT ================== */
-      tampilkanTanggal();
-      render();
-    </script>
-  </body>
 </html>
