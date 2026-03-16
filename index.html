@@ -142,6 +142,35 @@
 
     }
 
+    function semuaHadirHariIni() {
+
+      const hari = getHariSekarang()
+
+      data.forEach(p => {
+        p.hadir[hari] = true
+      })
+
+      save()
+      render()
+
+    }
+
+
+    function resetHariIni() {
+
+      const hari = getHariSekarang()
+
+      if (!confirm("Reset presensi hari ini?")) return
+
+      data.forEach(p => {
+        p.hadir[hari] = false
+      })
+
+      save()
+      render()
+
+    }
+
     function updateChart() {
 
       const jumlahPerHari = Array(30).fill(0)
