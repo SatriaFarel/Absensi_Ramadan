@@ -321,80 +321,80 @@
 
       /* ================== PDF ================== */
       function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("landscape");
-
-  const now = new Date().toLocaleDateString("id-ID");
-
-  /* ====== HEADER ====== */
-  doc.setFontSize(16);
-  doc.setFont(undefined, "bold");
-  doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" });
-
-  doc.setFontSize(12);
-  doc.setFont(undefined, "normal");
-  doc.text("Masjid Anwarul Hidayah", 148, 18, { align: "center" });
-
-  doc.setFontSize(9);
-  doc.text(`Tanggal Cetak: ${now}`, 14, 18);
-
-  /* ====== CEK HARI YANG ADA KEHADIRAN ====== */
-  const hariAktif = [];
-
-  for (let i = 0; i < 30; i++) {
-    const ada = data.some(p => p.hadir[i]);
-    if (ada) hariAktif.push(i);
-  }
-
-  /* ====== HEADER TABLE ====== */
-  const headers = ["No", "Nama"];
-
-  hariAktif.forEach(h => {
-    headers.push((h + 1).toString());
-  });
-
-  /* ====== BODY TABLE ====== */
-  const rows = data.map((item, index) => {
-    const row = [index + 1, item.nama];
-
-    hariAktif.forEach(h => {
-      row.push(item.hadir[h] ? "✔" : "");
-    });
-
-    return row;
-  });
-
-  /* ====== TABLE ====== */
-  doc.autoTable({
-    startY: 24,
-    head: [headers],
-    body: rows,
-
-    theme: "grid",
-
-    headStyles: {
-      fillColor: [60, 60, 60],
-      textColor: 255,
-      fontStyle: "bold",
-      halign: "center"
-    },
-
-    bodyStyles: {
-      halign: "center",
-      fontSize: 8
-    },
-
-    columnStyles: {
-      1: { halign: "left" } // kolom nama rata kiri
-    },
-
-    styles: {
-      cellPadding: 2
-    }
-  });
-
-  doc.save("absensi_tadarus.pdf");
-}
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("landscape");
+      
+        const now = new Date().toLocaleDateString("id-ID");
+      
+        /* ====== HEADER ====== */
+        doc.setFontSize(16);
+        doc.setFont(undefined, "bold");
+        doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" });
+      
+        doc.setFontSize(12);
+        doc.setFont(undefined, "normal");
+        doc.text("Masjid Anwarul Hidayah", 148, 18, { align: "center" });
+      
+        doc.setFontSize(9);
+        doc.text(`Tanggal Cetak: ${now}`, 14, 18);
+      
+        /* ====== CEK HARI YANG ADA KEHADIRAN ====== */
+        const hariAktif = [];
+      
+        for (let i = 0; i < 30; i++) {
+          const ada = data.some(p => p.hadir[i]);
+          if (ada) hariAktif.push(i);
+        }
+      
+        /* ====== HEADER TABLE ====== */
+        const headers = ["No", "Nama"];
+      
+        hariAktif.forEach(h => {
+          headers.push((h + 1).toString());
+        });
+      
+        /* ====== BODY TABLE ====== */
+        const rows = data.map((item, index) => {
+          const row = [index + 1, item.nama];
+      
+          hariAktif.forEach(h => {
+            row.push(item.hadir[h] ? "O" : "");
+          });
+      
+          return row;
+        });
+      
+        /* ====== TABLE ====== */
+        doc.autoTable({
+          startY: 24,
+          head: [headers],
+          body: rows,
+      
+          theme: "grid",
+      
+          headStyles: {
+            fillColor: [60, 60, 60],
+            textColor: 255,
+            fontStyle: "bold",
+            halign: "center"
+          },
+      
+          bodyStyles: {
+            halign: "center",
+            fontSize: 8
+          },
+      
+          columnStyles: {
+            1: { halign: "left" } // kolom nama rata kiri
+          },
+      
+          styles: {
+            cellPadding: 2
+          }
+        });
+      
+        doc.save("absensi_tadarus.pdf");
+      }
 
       /* ================== INIT ================== */
       tampilkanTanggal();
