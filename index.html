@@ -45,10 +45,21 @@
           Tambah
         </button>
 
+        <input id="searchInput" type="text" placeholder="Cari peserta..."
+          class="border border-slate-300 px-4 py-2 rounded-lg w-60 sm:w-64 outline-none" oninput="render()" />
+
       </div>
 
 
       <div class="flex gap-3 flex-wrap">
+
+        <button onclick="semuaHadirHariIni()" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+          Semua Hadir Hari Ini
+        </button>
+
+        <button onclick="resetHariIni()" class="bg-gray-600 text-white px-4 py-2 rounded-lg">
+          Reset Hari Ini
+        </button>
 
         <button onclick="exportJSON()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg">
           Export JSON
@@ -119,6 +130,45 @@
 
     function save() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    }
+
+
+    function getHariSekarang() {
+
+      const today = new Date().getDate()
+
+      if (today > 30) return 29
+
+      return today - 1
+
+    }
+
+
+    function semuaHadirHariIni() {
+
+      const hari = getHariSekarang()
+
+      data.forEach(p => {
+        p.hadir[hari] = true
+      })
+
+      save()
+      render()
+
+    }
+
+
+    function resetHariIni() {
+
+      const hari = getHariSekarang()
+
+      data.forEach(p => {
+        p.hadir[hari] = false
+      })
+
+      save()
+      render()
+
     }
 
 
@@ -239,7 +289,11 @@
       const tbody = document.getElementById("tbody")
       tbody.innerHTML = ""
 
+      const keyword = document.getElementById("searchInput")?.value?.toLowerCase() || ""
+
       data.forEach((item, index) => {
+
+        if (keyword && !item.nama.toLowerCase().includes(keyword)) return
 
         const tr = document.createElement("tr")
         tr.className = "hover:bg-slate-50"
@@ -276,7 +330,7 @@ Hapus
           const cb = document.createElement("input")
           cb.type = "checkbox"
           cb.checked = val
-          cb.className = "accent-indigo-600"
+          cb.className = "accent-indigo-600 w-5 h-5"
 
           cb.addEventListener("change", () => {
 
@@ -296,6 +350,8 @@ Hapus
       })
 
       updateChart()
+
+      document.getElementById("namaInput").focus()
 
     }
 
@@ -399,8 +455,6 @@ Hapus
 
       const now = new Date().toLocaleDateString("id-ID")
 
-      /* ===== HEADER PAGE 1 ===== */
-
       doc.setFontSize(20)
       doc.setFont(undefined, "bold")
       doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" })
@@ -411,9 +465,6 @@ Hapus
 
       doc.setFontSize(11)
       doc.text(`Tanggal Cetak: ${now}`, 14, 18)
-
-
-      /* ===== TABLE 1 (1-15) ===== */
 
       const headers1 = ["No", "Nama"]
       for (let i = 1; i <= 15; i++) headers1.push(i.toString())
@@ -424,20 +475,12 @@ Hapus
         ...item.hadir.slice(0, 15).map(h => h ? "O" : "")
       ])
 
-
       doc.autoTable({
-
         startY: 26,
         head: [headers1],
         body: rows1,
-
         theme: "grid",
-
-        styles: {
-          fontSize: 13,
-          cellPadding: 3
-        },
-
+        styles: { fontSize: 13, cellPadding: 3 },
         headStyles: {
           fillColor: [60, 60, 60],
           textColor: 255,
@@ -445,25 +488,14 @@ Hapus
           halign: "center",
           fontSize: 13
         },
-
-        bodyStyles: {
-          halign: "center"
-        },
-
+        bodyStyles: { halign: "center" },
         columnStyles: {
           0: { cellWidth: 12 },
           1: { cellWidth: 50, halign: "left" }
         }
-
       })
 
-
-      /* ===== PAGE 2 ===== */
-
       doc.addPage()
-
-
-      /* HEADER PAGE 2 */
 
       doc.setFontSize(20)
       doc.setFont(undefined, "bold")
@@ -476,9 +508,6 @@ Hapus
       doc.setFontSize(11)
       doc.text(`Tanggal Cetak: ${now}`, 14, 18)
 
-
-      /* ===== TABLE 2 (16-30) ===== */
-
       const headers2 = ["No", "Nama"]
       for (let i = 16; i <= 30; i++) headers2.push(i.toString())
 
@@ -488,20 +517,12 @@ Hapus
         ...item.hadir.slice(15, 30).map(h => h ? "O" : "")
       ])
 
-
       doc.autoTable({
-
         startY: 26,
         head: [headers2],
         body: rows2,
-
         theme: "grid",
-
-        styles: {
-          fontSize: 13,
-          cellPadding: 3
-        },
-
+        styles: { fontSize: 13, cellPadding: 3 },
         headStyles: {
           fillColor: [60, 60, 60],
           textColor: 255,
@@ -509,22 +530,17 @@ Hapus
           halign: "center",
           fontSize: 13
         },
-
-        bodyStyles: {
-          halign: "center"
-        },
-
+        bodyStyles: { halign: "center" },
         columnStyles: {
           0: { cellWidth: 12 },
           1: { cellWidth: 50, halign: "left" }
         }
-
       })
-
 
       doc.save("absensi_tadarus.pdf")
 
     }
+
     tampilkanTanggal()
     render()
 
