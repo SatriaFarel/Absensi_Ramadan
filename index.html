@@ -126,51 +126,21 @@
 
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []
     let chartInstance = null
+    let hariHijriah = 0
 
 
     function save() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     }
 
-
     function getHariSekarang() {
 
-      const today = new Date().getDate()
+      if (hariHijriah <= 0) return 0
+      if (hariHijriah > 30) return 29
 
-      if (today > 30) return 29
-
-      return today - 1
-
-    }
-
-
-    function semuaHadirHariIni() {
-
-      const hari = getHariSekarang()
-
-      data.forEach(p => {
-        p.hadir[hari] = true
-      })
-
-      save()
-      render()
+      return hariHijriah - 1
 
     }
-
-
-    function resetHariIni() {
-
-      const hari = getHariSekarang()
-
-      data.forEach(p => {
-        p.hadir[hari] = false
-      })
-
-      save()
-      render()
-
-    }
-
 
     function updateChart() {
 
@@ -227,7 +197,12 @@
       const cache = JSON.parse(localStorage.getItem(HIJRI_CACHE_KEY))
 
       if (cache && cache.date === todayKey) {
+
         el.textContent = `${masehi} | ${cache.hijri}`
+
+        const day = parseInt(cache.hijri)
+        if (!isNaN(day)) hariHijriah = day
+
         return
       }
 
@@ -242,23 +217,27 @@
         if (json.code === 200) {
 
           const h = json.data.hijri
+
+          hariHijriah = parseInt(h.day)
+
           const hijriText = `${h.day} ${h.month.en} ${h.year} H`
 
           el.textContent = `${masehi} | ${hijriText}`
 
           localStorage.setItem(HIJRI_CACHE_KEY, JSON.stringify({
             date: todayKey,
-            hijri: hijriText
+            hijri: h.day
           }))
 
         }
 
       } catch {
+
         el.textContent = `${masehi} | Hijriah gagal dimuat`
+
       }
 
     }
-
 
 
     function generateHeader() {
@@ -350,6 +329,7 @@ Hapus
       })
 
       updateChart()
+
     }
 
 
