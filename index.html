@@ -399,7 +399,8 @@ Hapus
 
       const now = new Date().toLocaleDateString("id-ID")
 
-      /* HEADER */
+      /* ===== HEADER PAGE 1 ===== */
+
       doc.setFontSize(20)
       doc.setFont(undefined, "bold")
       doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" })
@@ -412,7 +413,7 @@ Hapus
       doc.text(`Tanggal Cetak: ${now}`, 14, 18)
 
 
-      /* ================= TABLE 1 (1-15) ================= */
+      /* ===== TABLE 1 (1-15) ===== */
 
       const headers1 = ["No", "Nama"]
       for (let i = 1; i <= 15; i++) headers1.push(i.toString())
@@ -457,7 +458,26 @@ Hapus
       })
 
 
-      /* ================= TABLE 2 (16-30) ================= */
+      /* ===== PAGE 2 ===== */
+
+      doc.addPage()
+
+
+      /* HEADER PAGE 2 */
+
+      doc.setFontSize(20)
+      doc.setFont(undefined, "bold")
+      doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" })
+
+      doc.setFontSize(14)
+      doc.setFont(undefined, "normal")
+      doc.text("Masjid Anwarul Hidayah", 148, 18, { align: "center" })
+
+      doc.setFontSize(11)
+      doc.text(`Tanggal Cetak: ${now}`, 14, 18)
+
+
+      /* ===== TABLE 2 (16-30) ===== */
 
       const headers2 = ["No", "Nama"]
       for (let i = 16; i <= 30; i++) headers2.push(i.toString())
@@ -471,7 +491,7 @@ Hapus
 
       doc.autoTable({
 
-        startY: doc.lastAutoTable.finalY + 10,
+        startY: 26,
         head: [headers2],
         body: rows2,
 
@@ -505,8 +525,6 @@ Hapus
       doc.save("absensi_tadarus.pdf")
 
     }
-
-
     tampilkanTanggal()
     render()
 
