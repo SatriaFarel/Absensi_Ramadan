@@ -18,7 +18,6 @@
 
   <div class="max-w-7xl mx-auto space-y-8">
 
-    <!-- HEADER -->
     <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center border">
 
       <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
@@ -34,7 +33,6 @@
     </div>
 
 
-    <!-- CONTROL -->
     <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6 flex flex-wrap gap-4 items-center justify-between">
 
       <div class="flex gap-3 flex-wrap">
@@ -70,7 +68,6 @@
     </div>
 
 
-    <!-- CHART -->
     <div class="bg-white rounded-2xl shadow-md p-6">
 
       <h2 class="text-lg font-semibold text-slate-700 mb-4">
@@ -84,7 +81,6 @@
     </div>
 
 
-    <!-- TABLE -->
     <div class="bg-white rounded-2xl shadow-md p-4 sm:p-6">
 
       <div class="w-full overflow-x-auto">
@@ -112,7 +108,6 @@
   </div>
 
 
-
   <script>
 
     const STORAGE_KEY = "absensi_tadarus_ramadhan"
@@ -122,43 +117,34 @@
     let chartInstance = null
 
 
-
     function save() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     }
-
 
 
     function updateChart() {
 
       const jumlahPerHari = Array(30).fill(0)
 
-      data.forEach(peserta => {
-        peserta.hadir.forEach((val, i) => {
-          if (val) jumlahPerHari[i]++
+      data.forEach(p => {
+        p.hadir.forEach((v, i) => {
+          if (v) jumlahPerHari[i]++
         })
       })
 
       const ctx = document.getElementById("chartKehadiran")
 
-      if (chartInstance) {
-        chartInstance.destroy()
-      }
+      if (chartInstance) chartInstance.destroy()
 
       chartInstance = new Chart(ctx, {
-
         type: "bar",
-
         data: {
           labels: Array.from({ length: 30 }, (_, i) => `Hari ${i + 1}`),
-          datasets: [
-            {
-              label: "Jumlah Hadir",
-              data: jumlahPerHari
-            }
-          ]
+          datasets: [{
+            label: "Jumlah Hadir",
+            data: jumlahPerHari
+          }]
         },
-
         options: {
           responsive: true,
           scales: {
@@ -168,7 +154,6 @@
             }
           }
         }
-
       })
 
     }
@@ -178,7 +163,6 @@
     async function tampilkanTanggal() {
 
       const el = document.getElementById("tanggalSekarang")
-
       const now = new Date()
 
       const masehi = now.toLocaleDateString("id-ID", {
@@ -205,7 +189,7 @@
         const res = await fetch(url)
         const json = await res.json()
 
-        if (json.code === 200 && json.data?.hijri) {
+        if (json.code === 200) {
 
           const h = json.data.hijri
           const hijriText = `${h.day} ${h.month.en} ${h.year} H`
@@ -236,11 +220,8 @@
         for (let i = 1; i <= 30; i++) {
 
           const th = document.createElement("th")
-
           th.className = "border px-1 py-2"
-
           th.textContent = i
-
           headerRow.appendChild(th)
 
         }
@@ -256,18 +237,12 @@
       generateHeader()
 
       const tbody = document.getElementById("tbody")
-
       tbody.innerHTML = ""
-
-
 
       data.forEach((item, index) => {
 
         const tr = document.createElement("tr")
-
         tr.className = "hover:bg-slate-50"
-
-
 
         tr.innerHTML = `
 
@@ -277,7 +252,7 @@
 
 <input value="${item.nama}"
 class="w-full bg-transparent outline-none"
-onchange="editNama(${index}, this.value)">
+onchange="editNama(${index},this.value)">
 
 </td>
 
@@ -291,19 +266,14 @@ Hapus
 </button>
 
 </td>
-
 `
-
-
 
         item.hadir.forEach((val, hariIndex) => {
 
           const td = document.createElement("td")
-
           td.className = "border text-center"
 
           const cb = document.createElement("input")
-
           cb.type = "checkbox"
           cb.checked = val
           cb.className = "accent-indigo-600"
@@ -311,26 +281,19 @@ Hapus
           cb.addEventListener("change", () => {
 
             data[index].hadir[hariIndex] = cb.checked
-
             save()
-
             updateChart()
 
           })
 
           td.appendChild(cb)
-
           tr.appendChild(td)
 
         })
 
-
-
         tbody.appendChild(tr)
 
       })
-
-
 
       updateChart()
 
@@ -341,7 +304,6 @@ Hapus
     function tambahPeserta() {
 
       const input = document.getElementById("namaInput")
-
       const nama = input.value.trim()
 
       if (!nama) return
@@ -352,33 +314,26 @@ Hapus
       })
 
       input.value = ""
-
       save()
-
       render()
 
     }
 
 
 
-    function editNama(index, value) {
-
-      data[index].nama = value.trim()
-
+    function editNama(i, v) {
+      data[i].nama = v.trim()
       save()
-
     }
 
 
 
-    function hapusPeserta(index) {
+    function hapusPeserta(i) {
 
       if (!confirm("Yakin mau hapus peserta ini?")) return
 
-      data.splice(index, 1)
-
+      data.splice(i, 1)
       save()
-
       render()
 
     }
@@ -388,13 +343,10 @@ Hapus
     function exportJSON() {
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
-
       const a = document.createElement("a")
 
       a.href = URL.createObjectURL(blob)
-
       a.download = "absensi_tadarus.json"
-
       a.click()
 
     }
@@ -404,7 +356,6 @@ Hapus
     function importJSON(e) {
 
       const file = e.target.files[0]
-
       if (!file) return
 
       const reader = new FileReader()
@@ -424,15 +375,11 @@ Hapus
           })
 
           data = imported
-
           save()
-
           render()
 
         } catch {
-
           alert("File JSON tidak valid")
-
         }
 
       }
@@ -443,6 +390,8 @@ Hapus
 
 
 
+    /* ================= PDF ================= */
+
     function exportPDF() {
 
       const { jsPDF } = window.jspdf
@@ -450,7 +399,6 @@ Hapus
 
       const now = new Date().toLocaleDateString("id-ID")
 
-      /* HEADER */
       doc.setFontSize(20)
       doc.setFont(undefined, "bold")
       doc.text("ABSENSI TADARUS RAMADHAN 1447 H", 148, 12, { align: "center" })
@@ -463,24 +411,17 @@ Hapus
       doc.text(`Tanggal Cetak: ${now}`, 14, 18)
 
 
-      /* HEADER TABLE */
       const headers = ["No", "Nama"]
 
       for (let i = 1; i <= 30; i++) {
         headers.push(i.toString())
       }
 
-
-      /* BODY TABLE */
-      const rows = data.map((item, index) => {
-
-        return [
-          index + 1,
-          item.nama,
-          ...item.hadir.map(h => h ? "O" : "")
-        ]
-
-      })
+      const rows = data.map((item, index) => [
+        index + 1,
+        item.nama,
+        ...item.hadir.map(h => h ? "O" : "")
+      ])
 
 
       doc.autoTable({
@@ -492,8 +433,8 @@ Hapus
         theme: "grid",
 
         styles: {
-          fontSize: 12,      // tulisan isi tabel lebih besar
-          cellPadding: 4
+          fontSize: 12,
+          cellPadding: 3
         },
 
         headStyles: {
@@ -501,7 +442,7 @@ Hapus
           textColor: 255,
           fontStyle: "bold",
           halign: "center",
-          fontSize: 13
+          fontSize: 12
         },
 
         bodyStyles: {
@@ -509,8 +450,8 @@ Hapus
         },
 
         columnStyles: {
-          0: { cellWidth: 12 },               // No
-          1: { cellWidth: 60, halign: "left" } // Nama
+          0: { cellWidth: 10 },
+          1: { cellWidth: 50, halign: "left" }
         }
 
       })
@@ -518,6 +459,7 @@ Hapus
       doc.save("absensi_tadarus.pdf")
 
     }
+
 
 
     tampilkanTanggal()
